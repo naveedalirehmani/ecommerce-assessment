@@ -1,22 +1,31 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useCart } from './CartContext';
+import { useCartStore } from '../stores/use-cart.store';
+import { useProductStore, Product } from '../stores/use-product.store';
 
-export default function MonolithicProductPage({ products }: any) {
-  const { addToCart } = useCart();
+export default function MonolithicProductPage() {
+  const { addToCart } = useCartStore();
+  const { 
+    products, 
+    isLoading: storeLoading, 
+    fetchProducts
+  } = useProductStore();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('name');
   const [filterPrice, setFilterPrice] = useState(1000);
-  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const filteredProducts = products
-    ?.filter(
-      (product: any) =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        product.price <= filterPrice
+    .filter((product: Product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      product.price <= filterPrice
     )
-    .sort((a: any, b: any) => {
+    .sort((a: Product, b: Product) => {
       if (sortOrder === 'name') return a.name.localeCompare(b.name);
       if (sortOrder === 'price') return a.price - b.price;
       return 0;
@@ -68,7 +77,13 @@ export default function MonolithicProductPage({ products }: any) {
       </div>
 
       <div className='grid grid-cols-3 gap-6'>
-        {filteredProducts?.map((product: any) => (
+        {storeLoading ? (
+          <div className="col-span-3 text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading products...</p>
+          </div>
+        ) : (
+          filteredProducts?.map((product: Product) => (
           <div
             key={product.id}
             style={{ backgroundColor: 'white', padding: '16px' }}
@@ -99,7 +114,8 @@ export default function MonolithicProductPage({ products }: any) {
               </button>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
