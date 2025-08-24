@@ -1,141 +1,131 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { fetchProducts, Product } from '../lib/graphql';
+import { useProductStore, Product } from '../stores/use-product.store';
 import ProductCard from '../components/ProductCard';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Search, Truck, Shield, Clock, Loader2 } from 'lucide-react';
 
 export default function Home() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { 
+    products, 
+    isLoading, 
+    fetchProducts 
+  } = useProductStore();
+  
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetchProducts().then(({ data }) => {
-      setProducts(data.products);
-      setLoading(false);
-    });
-  }, []);
+    fetchProducts();
+  }, [fetchProducts]);
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = searchTerm 
+    ? products.filter(product => 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : products;
 
-  const sortedProducts = filteredProducts.sort((a, b) =>
+  const sortedProducts = [...filteredProducts].sort((a, b) =>
     a.name.localeCompare(b.name)
   );
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-50 to-gray-100'>
+    <div className='min-h-screen bg-background'>
       <div className='container mx-auto px-4 py-8'>
         {/* Hero Section */}
         <div className='text-center mb-12'>
-          <h1 className='text-4xl md:text-5xl font-bold text-gray-900 mb-4'>
-            Welcome to Our Store
+          <h1 className='text-4xl md:text-5xl font-bold text-foreground mb-4'>
+            Welcome to StyleStore
           </h1>
-          <p className='text-xl text-gray-600 max-w-2xl mx-auto'>
+          <p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
             Discover our curated collection of premium products, carefully
             selected for style and quality.
           </p>
+          <Badge variant="secondary" className="mt-4">
+            New Collection Available
+          </Badge>
         </div>
 
         {/* Products Section */}
         <div className='mb-8'>
-          <h2 className='text-2xl font-semibold text-gray-900 mb-6'>
+          <h2 className='text-2xl font-semibold text-foreground mb-6'>
             Featured Products
           </h2>
-          <div className='mb-4'>
-            <input
+          <div className='relative mb-6'>
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
               type='text'
               placeholder='Search products...'
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+              className="pl-10"
             />
           </div>
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
-            {sortedProducts.map((product: Product, index) => (
-              <ProductCard key={index} product={product} />
-            ))}
+            {isLoading ? (
+              <div className="col-span-full text-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                <p className="mt-4 text-muted-foreground">Loading products...</p>
+              </div>
+            ) : sortedProducts.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">No products found matching your search.</p>
+              </div>
+            ) : (
+              sortedProducts.map((product: Product, index) => (
+                <ProductCard key={product.id || index} product={product} />
+              ))
+            )}
           </div>
         </div>
 
         {/* Features Section */}
-        <div className='mt-16 py-12 bg-white rounded-xl shadow-sm'>
-          <div className='max-w-4xl mx-auto px-6'>
-            <h3 className='text-2xl font-bold text-gray-900 text-center mb-8'>
-              Why Choose Us?
-            </h3>
+        <Card className='mt-16'>
+          <CardHeader className='text-center'>
+            <CardTitle className='text-2xl'>Why Choose StyleStore?</CardTitle>
+            <CardDescription>
+              We're committed to providing the best shopping experience
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
               <div className='text-center'>
-                <div className='bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <svg
-                    className='w-8 h-8 text-blue-600'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4'
-                    />
-                  </svg>
+                <div className='bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <Truck className='w-8 h-8 text-primary' />
                 </div>
-                <h4 className='text-lg font-semibold text-gray-900 mb-2'>
+                <h4 className='text-lg font-semibold text-foreground mb-2'>
                   Free Shipping
                 </h4>
-                <p className='text-gray-600'>
+                <p className='text-muted-foreground'>
                   Free shipping on all orders over $50
                 </p>
               </div>
               <div className='text-center'>
-                <div className='bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <svg
-                    className='w-8 h-8 text-green-600'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
-                    />
-                  </svg>
+                <div className='bg-secondary/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <Shield className='w-8 h-8 text-primary' />
                 </div>
-                <h4 className='text-lg font-semibold text-gray-900 mb-2'>
+                <h4 className='text-lg font-semibold text-foreground mb-2'>
                   Quality Guaranteed
                 </h4>
-                <p className='text-gray-600'>30-day money-back guarantee</p>
+                <p className='text-muted-foreground'>30-day money-back guarantee</p>
               </div>
               <div className='text-center'>
-                <div className='bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <svg
-                    className='w-8 h-8 text-purple-600'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 109.75 9.75A9.75 9.75 0 0012 2.25z'
-                    />
-                  </svg>
+                <div className='bg-accent w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <Clock className='w-8 h-8 text-primary' />
                 </div>
-                <h4 className='text-lg font-semibold text-gray-900 mb-2'>
+                <h4 className='text-lg font-semibold text-foreground mb-2'>
                   24/7 Support
                 </h4>
-                <p className='text-gray-600'>
+                <p className='text-muted-foreground'>
                   Round-the-clock customer support
                 </p>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
